@@ -20,4 +20,32 @@
     }
     </style>
 </head>
+<body>
+<script type="application/javascript">
+// Intro music
+var game = {
+    inProgress: false,
+    score: 0,
+    highScore: document.cookie || 0
+};
+const growthFactor = 2; // How big it grows each interval
+const interval = 1500; // How long each interval is
+const resetInterval = 1000;
+var colors = [
+    '#1a1ee0','#d91ae0', '#e01a38',"#e0491a", '#e09b1a','#73e01a', '#966401', '#0350a0'
+];
+var colorIndex = 0;
+var myAudioContext = new AudioContext;
+
+const initialize = function () {
+    game.inProgress = false;
+    game.highScore = parseInt(document.cookie) || 0;
+    // Screen text
+    var scoreMessage = (game.score > 0) ? "Last: " + game.score + " " : "Swivel chair recommended. ";
+    document.getElementById('score').setAttribute("canvas-text", "text: " + scoreMessage + " Best: " + game.highScore);
+    document.getElementById('shapes').setAttribute("visible", false);
+    document.getElementById('titleShape').setAttribute("visible", true);
+    document.getElementById('instructions').setAttribute("visible", true);
+    document.getElementById('sky').setAttribute('color', "#000000");
+}
 
