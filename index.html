@@ -48,4 +48,17 @@ const initialize = function () {
     document.getElementById('instructions').setAttribute("visible", true);
     document.getElementById('sky').setAttribute('color', "#000000");
 }
+window.onload = initialize;
+
+const newGame = function () {
+    if (game.inProgress) return;
+    game.inProgress = true;
+    game.score = 0;
+    document.getElementById('shapes').setAttribute("visible", true);
+    document.getElementById('titleShape').setAttribute("visible", false);
+    document.getElementById('instructions').setAttribute("visible", false);
+    document.getElementById('score').setAttribute("canvas-text", "text:;");
+    playSound("intro");
+}
+
 
