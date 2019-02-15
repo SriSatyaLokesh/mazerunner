@@ -60,5 +60,21 @@ const newGame = function () {
     document.getElementById('score').setAttribute("canvas-text", "text:;");
     playSound("intro");
 }
+const increaseScore = function () {
+    game.score++;
+    playSound("point");
+    document.getElementById('score').setAttribute("canvas-text", "text: " + game.score);
+}
+
+const gameOver = function () {
+    game.inProgress = false;
+    playSound("end");
+    if (game.score > game.highScore) {
+        // TODO: Celebrate new high score
+        game.highScore = game.score;
+        document.cookie = game.highScore;
+    }
+    initialize();
+}
 
 
