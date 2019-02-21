@@ -99,5 +99,133 @@ const playSound = function (soundName) {
         with(myAudioContext)[15,16,17,18,18].map((v,i)=>{with(createOscillator())v&&start(e=[1,2,3,4,5][i]/5,connect(destination),frequency.value=988/1.06**v,type='triangle',)+stop(e+.2)})
     }
 }
+ AFRAME.registerComponent('canvas-text', {
+        schema: {
+            text: {type: 'string', default: ''},
+            width: {type: 'number', default: 256},
+            height: {type: 'number', default: 64}
+        },
+        init: function() {
+            this.update();
+        },
+        update: function (oldData) {
+            var _ = this;
+            if (!oldData) this.createCanvas(this.data.width, this.data.height);
+            var fontSize = 48;
+            var textSize = {};
+            _.ctx.font = fontSize + "px Impact";
+            _.ctx.fillStyle = "white";
+            _.ctx.textBaseline="hanging"; 
+            while (true) {
+                textSize = _.ctx.measureText(this.data.text);
+                if(textSize.width < this.data.width) {
+                    break;
+                }
+                fontSize -= 2;
+                _.ctx.font = fontSize + "px Impact";
+            }
+            var textDiff = this.data.width - textSize.width;
+            _.ctx.clearRect(0, 0, _.canvas.width, _.canvas.height);
+            _.ctx.fillText(this.data.text, textDiff/2, 10);
+            this.el.setAttribute("src", _.canvas.toDataURL())
+            this.el.setAttribute("width", _.canvas.width/100.0)
+            this.el.setAttribute("height", _.canvas.height/100.0)
+        },
+        createCanvas: function (w, h) {
+            var _ = this;
+            var canvas = document.createElement("canvas");
+            canvas.width = w;
+            canvas.height = h;
+            _.canvas = canvas;
+            _.ctx = canvas.getContext('2d');
+
+        }
+    });
+    AFRAME.registerComponent('collider-check', {
+      dependencies: ['raycaster'],
+      init: function () {
+        var e = this.el.addEventListener('raycaster-intersection', function (evt) {
+            if (game.inProgress) {
+                gameOver();
+            }
+        });
+      }
+    });
+    AFRAME.registerComponent('floating-shape', {
+        init: function () {
+            this.forward = new THREE.Vector3(0,0,-32);
+            this.helperVector = new THREE.Vector3();
+            this.parentPosition = new THREE.Vector3();
+            this.mainCamera = document.querySelector("#mainCamera");
+        },
+        tick: function (time, timeDelta) {
+            this.helperVector.copy(this.forward).applyQuaternion(this.mainCamera.object3D.quaternion);
+            this.parentPosition.copy(this.mainCamera.getAttribute('position'));
+            this.el.setAttribute('position', {
+                x: this.helperVector.x + this.parentPosition.x,
+                y: this.helperVector.y + this.parentPosition.y,
+                z: this.helperVector.z + this.parentPosition.z
+            })
+            
+        }
+    })
+    AFRAME.registerComponent('growing-shape', {
+        schema: {
+            interval: {type: 'number', default: 1}
+        },
+        init: function() {
+            this.startScale = this.el.getAttribute('scale');
+            this.randomize();
+
+            this.scored = false;
+            this.loops = 0;
+        },
+        tick: function (time, timeDelta) {
+            // Scale is exponential (doubling every interval)
+            if (game.inProgress) {
+                let scale = this.el.getAttribute('scale').x
+                scale = scale * Math.pow(growthFactor, (timeDelta/(interval-75*this.loops)));
+                if (scale > 36 && !this.scored) {
+                    increaseScore();
+                    this.scored = true;
+                };
+                if (scale > 256.0) {
+                    let newScale = scale;
+                    document.querySelectorAll('.shape').forEach(function (shape, currentIndex, listObj) {
+                        newScale = Math.min(shape.getAttribute('scale').x, newScale);
+                    })
+                    document.getElementById('sky').setAttribute('color', this.color);
+                    scale = newScale / 4.0;
+                    this.randomize();
+                    this.scored = false;
+                    this.loops++;
+                }
+                this.el.setAttribute('scale',{
+                    x: scale,
+                    y: scale,
+                    z: scale
+                });
+            } else {
+                this.loops = 0;
+                this.scored = false;
+                this.el.setAttribute('scale', this.startScale);
+            }
+        },
+        randomize: function () {
+            this.color = colors[colorIndex++ % colors.length];
+            var material = new THREE.MeshStandardMaterial( { shading: THREE.FlatShading, color: this.color, side:THREE.DoubleSide } );
+            var geometry = new THREE.DodecahedronGeometry(1,0);
+            geometry.faces.splice(Math.floor(Math.random()*12) * 3, 3);
+            geometry.faces.splice(Math.floor(Math.random()*11) * 3, 3);
+            var mesh = new THREE.Mesh(geometry, material);
+            this.el.setObject3D('mesh', mesh);
+            var raycasterEl = AFRAME.scenes[0].querySelector('[raycaster]');
+            if(raycasterEl.components.hasOwnProperty("raycaster"))
+                raycasterEl.components.raycaster.refreshObjects();
+        }
+    })
+    document.querySelector('body').addEventListener('mousedown', newGame)
+    document.querySelector('body').addEventListener('touchstart', newGame);
+</script>
 
 
